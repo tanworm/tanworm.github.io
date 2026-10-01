@@ -4,6 +4,6 @@ html{
 
 .center-image {
     display:block;
-    width:40%;
+    width:auto;
     height:268px;
 }
