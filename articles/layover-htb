@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../css/uikit.css">
+    <link rel="stylesheet" href="../css/styles.css">
+    <script src="../js/uikit.js"></script>
+    <script src="../js/uikit-icons.js"></script>
+
+    <title>Layover (HTB) Writeup</title>
+</head>
+<body>
+<!-- Navigation Bar -->
+       <nav class="uk-navbar-container uk-margin-small-left uk-margin-small-right uk-visible@m uk-margin-xlarge-left uk-margin-xlarge-right" uk-navbar uk-sticky="sel-target: .uk-navbar-container; cls-active: uk-navbar-sticky">
+    
+    <div class="uk-navbar-left">
+        <h2 class="uk-navbar-item uk-logo uk-light">Layover Writeup (HTB)</h2>
+    </div>
+    <div class="uk-navbar-right">
+
+        <ul class="uk-navbar-nav uk-light">
+            <li><a class="uk-button-text uk-text-capitalize uk-scroll" href="../index.html">Homepage</a></li>
+            <li><a class="uk-button-text uk-text-capitalize uk-scroll" href="../writeups">Other Writeups</a></li>
+        </ul>
+    </div>
+</nav>
+<!-- Navigation Bar Ends  -->
+
+<!-- Navigation Bar Mobile -->
+<nav class="uk-navbar-container uk-margin-small-left uk-margin-small-right uk-hidden@m uk-margin-xlarge-left uk-margin-xlarge-right uk-navbar" uk-sticky="sel-target: .uk-navbar-container; cls-active: uk-navbar-sticky">
+    
+    <div class="uk-navbar-left">
+        <h2 class="uk-navbar-item uk-logo uk-light">Layover Writeup (HTB)</h2>
+    </div>
+    <div class="uk-navbar-right">
+
+        <ul class="uk-navbar-nav uk-light">
+            <li><button uk-toggle="target: #offcanvas-nav" type="button" uk-navbar-toggle-icon></button></li>
+
+        </ul>
+
+    </div>
+</nav>
+
+<!--hr class="uk-margin-xlarge-top uk-margin-xlarge-left uk-margin-xlarge-right"> -->
+
+ <div class="uk-margin uk-card uk-card-secondary uk-card-body ">
+        <p>In this article I'll be walking you through how to pawn the Layover machine on HackTheBox(HTB).</p>
+
+<u><p><b>Information about Layover Machine:</b></p></u>
+<ul>
+<li>Difficulty: Medium</li>
+<li>OS : Linux</li>
+<li>Machine Rating: 4.0+</li>
+<li>Release Date: 26 Sept. 2026</li>
+</ul>
+
+<p>This box will require teaches you a lot from Linux Privilege Escalation techniques to Network Pentesting and Wireless Attacks. Having prerequisite knowledge in either will  make your job easier and help you get root quicker.</p>
+
+<p>After launching the machine. We are given the following credentials as a start</p>
+
+<img src="../images/ctf/layover-htb/credentials1.png" class="center-image">
+
+<p><b>Username: contractor |  Password : Contractor2026!</b></p>
+
+<u><h3><b>Reconnaissance</b></h3></u>
+
+<p>The first logical thing is to look for exposed ports on the target machine. I used the nmap with the sequence `nmap -sC -sV –top-ports 100  10.129.xxx.xxx` which returned the following ports</p>
+<ol>
+Port 22:  SSH
+Port 3389: RDP
+</ol>
+ <p style="font-size:smaller">🛈 We are not permitted SSH access with the credentials given so we have to use RDP.
+ Trying that gives us a remote connection into the host machine (airside-ws01).</p> 
+
+
+<u><h3><b>Enumeration</b></h3></u>
+
+<p>There is no user flag in the home directory or anywhere I can look so the next logical step is to find a way to escalate privileges to root. I run a linpeas script from my local machine to get information that may be helpful.</p>
+<ul>
+<li>Linpeas script reports:</li>
+<li>Network interfaces</li>
+<li> Network-related binaries</li>
+<li>Root access</li>
+</ul>
+
+<p>Since we have network interfaces present, we could potentially connect to an available Wireless Network.</p>
+
+<img src="../images/ctf/layover-htb/interfaces.png" class="center-image"/>
+
+<p>The script also probes for other targets on the same network as our eth0 interface and successfully finds one.</p>
+
+<img src="../images/ctf/layover-htb/netscan.png" class="center-image"/>
+
+<p>Probing for WiFi networks with nmcli returns us with one <b>unsecured</b>  <u>HTB International WiFi</u>
+which we can simply connect to as it requires no password.</p>
+
+<p>A new tab is opened in a browser showing the company website at *portal.international.htb”.
+A login page located at `/miles` allows anyone to login with any gibberish credentials.</p>
+
+<p>Since we don't have access to our machine box, we can't intercept requests to the application, so we have to improvise.</p>
+
+<u><p>Among the binaries discovered earlier, I found these interesting:<p></u>
+<ul>
+<li>wireshark/tshark</li>
+<li>aircrack-ng suite.</li>
+</ul>
+<p>Combined with the additional interface wlan3. We can potentially monitor  ALL traffic on the network.</p>
+
+<u><p>Step 1:</p></u>
+<p>Put the interface in monitor mode using airmon-ng. Finally makes sense why the author gave us root access!<br>
+	(Note: Killing the wpa_supplicant process will disconnect you from the network)</p>
+
+ <p><u>Step 2:</u><br>
+Monitor Traffic with wireshar/ktshark/tcpdump:<br>
+
+From there on you should be able to intercept POST requests to the server and find a vulnerability in the web application which can be exploited to give you a shell.</p>
+
+</div>
+   
+</body>
+</html>
